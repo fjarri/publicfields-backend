@@ -1,0 +1,12 @@
+{
+	"folders":
+	[
+		{
+			"path": "/Volumes/Data/Workbench/github/publicfields-backend",
+            "file_exclude_patterns": [
+                "*.sublime-workspace",
+                "*.pyc"
+            ]
+		}
+	]
+}
