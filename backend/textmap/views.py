@@ -62,7 +62,8 @@ def get_colors():
     """
     Returns a json with mapping from color names to colors in the thumbnail.
     """
-    return jsonify(**process.get_thumbnail_colors())
+    callback = request.args.get('callback', '')
+    return callback + "(" + jsonify(process.get_thumbnail_colors()).data + ");"
 
 
 @app.route('/textmap/thumbnail<int:width>.png')
