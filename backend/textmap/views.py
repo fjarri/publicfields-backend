@@ -39,8 +39,8 @@ def get_eps():
         colors[color_name] = color
 
     try:
-        aspect = int(request.args.get('aspect', 'original'))
-        if aspect not in ('original', 'A', 'golden'):
+        aspect = request.args.get('aspect', 'robinson')
+        if aspect not in ('robinson', 'A', 'golden'):
             raise ValueError
     except ValueError:
         abort(400)
@@ -66,16 +66,16 @@ def get_colors():
     return callback + "(" + jsonify(process.get_thumbnail_colors()).data + ");"
 
 
-@app.route('/textmap/thumbnail<int:width>.png')
-def get_thumbnail(width):
+@app.route('/textmap/thumbnail<int:width>-<aspect>.png')
+def get_thumbnail(width, aspect):
     """
     Returns a .png file with a non-antialiased thumbnail.
     """
-    name = "thumbnail" + str(width) + ".png"
+    name = "thumbnail" + str(width) + "-" + aspect + ".png"
 
     img_io = cache.get(name)
     if img_io is None:
-        img_io = process.get_thumbnail(width)
+        img_io = process.get_thumbnail(width, aspect)
         cache.set(name, img_io)
 
     return send_file(img_io, mimetype='image/png',

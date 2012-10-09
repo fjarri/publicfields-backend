@@ -4,7 +4,7 @@ import Image
 
 
 # Colors that were set in the original Scribus-generated file
-original_colors = dict(
+ORIGINAL_COLORS = dict(
     ocean="0.901961 0.643137 0.184314 0.407843", # ocean
     main1="0.576471 0.0784314 0.545098 0.0627451", # country (Russia)
     main2="0.0980392 0.827451 0.513725 0.0901961", # country (Canada)
@@ -42,7 +42,7 @@ def prepare_eps(infile):
     before = before.replace("1729", "BBOX_HEIGHT_INTEGER")
 
     # replace colors by macro calls
-    for name, color in original_colors.items():
+    for name, color in ORIGINAL_COLORS.items():
         after = after.replace(color + " cmyk", ps_setcolor(name))
 
     # replace clipping box and ocean box sizes by macros
@@ -102,42 +102,38 @@ def pick_colors():
     color_picker = color_picker.resize((110, 10))
 
     colors = {}
-    for i, name in enumerate(sorted(original_colors)):
+    for i, name in enumerate(sorted(ORIGINAL_COLORS)):
         colors[name] = color_picker.getpixel((5 + i * 10, 5))
     return colors
 
 
 # Pre-load data
-map_original = os.path.join(os.path.split(__file__)[0], 'map_original.eps')
-orig_height = 1729.13
-orig_width = 3370.39
+EPS_ORIGINAL = os.path.join(os.path.split(__file__)[0], 'map_original.eps')
+EPS_WIDTH = 3370.39
+EPS_HEIGHT = dict(
+    robinson=1729.13,
+    A=EPS_WIDTH / math.sqrt(2.0),
+    golden=EPS_WIDTH / (math.sqrt(5.0) + 1) * 2)
 
 # preapre eps template
-before, after = prepare_eps(map_original)
-
-# prepare map image
-map_image = Image.open(map_original)
+EPS_BEFORE, EPS_AFTER = prepare_eps(EPS_ORIGINAL)
 
 # Prepare RGB colors
-rgb_colors = pick_colors()
+RGB_COLORS = pick_colors()
 
 
 def get_eps(colors, aspect):
     colordefs = []
-    for name, color in newcolors.items():
+    for name, color in colors.items():
+        if isinstance(color, str):
+            color = tuple(color.split(' '))
         colordefs.append(ps_colordef(name, " ".join([str(x) for x in color])))
 
-    if aspect == 'original':
-        new_height = orig_height
-    elif aspect == 'A':
-        new_height = orig_width / math.sqrt(2.0)
-    elif aspect == 'golden':
-        new_height = orig_width / (math.sqrt(5.0) - 1) * 2
-
-    before = before.replace("BBOX_HEIGHT_PRECISE", str(new_height))
+    new_height = EPS_HEIGHT[aspect]
+    before = EPS_BEFORE.replace("BBOX_HEIGHT_PRECISE", str(new_height))
     before = before.replace("BBOX_HEIGHT_INTEGER", str(int(new_height)))
     eps = before + "\n" + "\n".join(colordefs) + \
-        "\n/posterheight {" + str(new_height) + "} def" + after
+        "\n/posterheight {" + str(new_height) + "} def" + EPS_AFTER
 
     eps_io = StringIO.StringIO()
     eps_io.write(eps)
@@ -145,13 +141,18 @@ def get_eps(colors, aspect):
     return eps_io
 
 
+# prepare map image
+MAP_IMAGE = {aspect:Image.open(get_eps(ORIGINAL_COLORS, aspect))
+    for aspect in ('A', 'robinson', 'golden')}
+
+
 def get_thumbnail_colors():
-    return rgb_colors
+    return RGB_COLORS
 
 
-def get_thumbnail(width):
+def get_thumbnail(width, aspect):
     img_io = StringIO.StringIO()
-    resized = map_image.resize(((width, int(width / orig_width * orig_height))))
+    resized = MAP_IMAGE[aspect].resize(((width, int(width / EPS_WIDTH * EPS_HEIGHT[aspect]))))
     resized.save(img_io, 'PNG')
     img_io.seek(0)
     return img_io
