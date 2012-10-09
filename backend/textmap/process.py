@@ -98,7 +98,7 @@ def pick_colors():
     # we are using a hacky approach with creating a simple .eps with the same colors
     # (in alphabetical order).
 
-    color_picker = Image.open(os.path.join(os.path.split(__file__)[0], 'map_original.eps'))
+    color_picker = Image.open(os.path.join(os.path.split(__file__)[0], 'color_picker.eps'))
     color_picker = color_picker.resize((110, 10))
 
     colors = {}
