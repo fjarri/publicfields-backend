@@ -9,7 +9,7 @@ cache = SimpleCache()
 
 
 def process_color_str(color_str):
-    colors = color_str.split()
+    colors = color_str.split(',')
     if len(colors) != 4: raise ValueError
 
     result = []
